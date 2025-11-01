@@ -1,13 +1,13 @@
 import React from "react";
-import { prepareContractCall, getContract } from "thirdweb";
+import { getContract, prepareContractCall } from "thirdweb";
 import { useSendTransaction } from "thirdweb/react";
 import { client } from "./App.jsx";
-import { defineChain } from "thirdweb/chains";
+import { base } from "thirdweb/chains";
 
-// 🔗 Alamat kontrak kamu
+// Alamat kontrak kamu
 const contract = getContract({
   client,
-  chain: defineChain(8453), // Base mainnet
+  chain: base, // chain: defineChain(8453) juga boleh
   address: "0xef7d6880e7837D06bAa6090F8378592F3B4e174a",
 });
 
@@ -17,14 +17,14 @@ export default function ClaimButton() {
 
   const handleClaim = async () => {
     try {
-      const tx = prepareContractCall({
+      const tx = await prepareContractCall({
         contract,
-        method: "function claimRewards()",
+        method: "claimRewards", // jangan tulis 'function claimRewards()'
         params: [],
       });
       await sendTransaction(tx);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Claim error:", err);
     }
   };
 
@@ -47,8 +47,16 @@ export default function ClaimButton() {
         {isLoading ? "Claiming..." : "Claim Rewards"}
       </button>
 
-      {isSuccess && <p style={{ color: "lightgreen" }}>✅ Rewards claimed!</p>}
-      {error && <p style={{ color: "tomato" }}>❌ {error.message}</p>}
+      {isSuccess && (
+        <p style={{ color: "lightgreen", marginTop: "10px" }}>
+          ✅ Rewards claimed successfully!
+        </p>
+      )}
+      {error && (
+        <p style={{ color: "tomato", marginTop: "10px" }}>
+          ❌ {error?.message || "Transaction failed"}
+        </p>
+      )}
     </div>
   );
 }
