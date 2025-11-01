@@ -1,7 +1,5 @@
-
 import React, { useState } from "react";
-import { getContract, prepareContractCall } from "thirdweb";
-import { useSendTransaction } from "thirdweb/react";
+import { getContract, prepareContractCall, sendAndConfirmTransaction } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { client } from "./App.jsx";
 
@@ -14,57 +12,59 @@ const tokenContract = getContract({ client, chain, address: tokenAddress });
 
 export default function StakeButton() {
   const [amount, setAmount] = useState("");
-  const { mutateAsync: sendTx, isLoading, error } = useSendTransaction();
+  const [status, setStatus] = useState("");
 
   const handleStake = async () => {
     try {
-      if (!amount || isNaN(amount) || Number(amount) <= 0) {
-        alert("Masukkan jumlah valid!");
-        return;
-      }
+      setStatus("pending");
 
-      // ✅ Convert amount → 18 decimals
-      const parsedAmount = BigInt(amount) * (10n ** 18n);
+      const parsedAmount = BigInt(amount) * 10n ** 18n;
 
       // ✅ 1. Approve
-      const approveTx = prepareContractCall({
+      const approveTx = await prepareContractCall({
         contract: tokenContract,
-        method: "function approve(address spender, uint256 amount)",
+        method: "approve",
         params: [stakingAddress, parsedAmount],
       });
 
-      await sendTx({ transaction: approveTx });
+      await sendAndConfirmTransaction({
+        transaction: approveTx,
+        client,
+      });
 
       // ✅ 2. Stake
-      const stakeTx = prepareContractCall({
+      const stakeTx = await prepareContractCall({
         contract: stakingContract,
-        method: "function stake(uint256 _amount)",
+        method: "stake",
         params: [parsedAmount],
       });
 
-      await sendTx({ transaction: stakeTx });
+      await sendAndConfirmTransaction({
+        transaction: stakeTx,
+        client,
+      });
 
-      alert("✅ Staking berhasil!");
+      setStatus("success");
     } catch (err) {
+      setStatus("error");
       console.error(err);
-      alert("❌ Gagal staking: " + err.message);
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "20px" }}>
+    <div style={{ textAlign: "center" }}>
       <input
         type="number"
         placeholder="Jumlah token"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
-      
-      <button onClick={handleStake} disabled={isLoading}>
-        {isLoading ? "Processing..." : "Stake Token"}
-      </button>
 
-      {error && <p style={{ color: "tomato" }}>❌ {error.message}</p>}
+      <button onClick={handleStake}>Stake</button>
+
+      {status === "pending" && <p style={{ color: "yellow" }}>⏳ Menunggu konfirmasi...</p>}
+      {status === "success" && <p style={{ color: "lightgreen" }}>✅ Staking berhasil!</p>}
+      {status === "error" && <p style={{ color: "tomato" }}>❌ Gagal staking.</p>}
     </div>
   );
 }
