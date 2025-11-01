@@ -18,6 +18,7 @@ export default function StakeButton() {
     try {
       setStatus("pending");
 
+      // ✅ Convert amount → wei
       const parsedAmount = BigInt(amount) * 10n ** 18n;
 
       // ✅ 1. Approve
@@ -25,6 +26,7 @@ export default function StakeButton() {
         contract: tokenContract,
         method: "approve",
         params: [stakingAddress, parsedAmount],
+        value: 0n, // ✅ approve TIDAK perlu ETH
       });
 
       await sendAndConfirmTransaction({
@@ -37,6 +39,7 @@ export default function StakeButton() {
         contract: stakingContract,
         method: "stake",
         params: [parsedAmount],
+        value: 0n, // ✅ WAJIB ADA karena stake() payable
       });
 
       await sendAndConfirmTransaction({
@@ -46,8 +49,8 @@ export default function StakeButton() {
 
       setStatus("success");
     } catch (err) {
-      setStatus("error");
       console.error(err);
+      setStatus("error");
     }
   };
 
