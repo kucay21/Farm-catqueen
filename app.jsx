@@ -2,18 +2,19 @@ import React from "react";
 import { ThirdwebProvider, ConnectButton } from "thirdweb/react";
 import { createThirdwebClient, defineChain } from "thirdweb";
 import ClaimButton from "./ClaimButton.jsx";
+import StakeButton from "./StakeButton.jsx"; // kalau belum ada, hapus dulu baris ini
 
-// ✅ Client ID kamu (dari thirdweb)
+// ✅ Client ID dari Thirdweb
 export const client = createThirdwebClient({
   clientId: "77bdb1a4b615d59917efaef65a2b745e",
 });
 
-// 🔗 Jaringan Base mainnet (chain ID 8453)
-const chain = defineChain(8453);
+// ✅ Base Mainnet (chain ID 8453)
+export const chain = defineChain(8453);
 
 function App() {
   return (
-    <ThirdwebProvider>
+    <ThirdwebProvider client={client} activeChain={chain}>
       <div
         style={{
           display: "flex",
@@ -34,6 +35,9 @@ function App() {
 
         {/* Tombol claim */}
         <ClaimButton />
+
+        {/* Tombol stake (kalau file-nya sudah ada) */}
+        {/* <StakeButton /> */}
       </div>
     </ThirdwebProvider>
   );
